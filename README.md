@@ -1,6 +1,6 @@
 # Decisions
 
-I've decided to break the project into two parts: 
+I decided to break the project into two parts: 
 - Create a small framework to handle requests, routing, and object initialization.
 - Implement the API with all business logic.
 
@@ -10,9 +10,9 @@ which helps in writing tests.
 
 ## Framework
 ### Routing
-Here I opted to implement an annotation-based routing system to handle all the requests. By doing that, I could extract all the routing 
-logic from the application to the framework implementation, making it easier to find which route is handled by which method. Additionally, 
-with this implementation, it is really simple to create new controllers. To do routing, you need to:
+Here I opted to implement an annotation-based routing system to handle all the requests. By doing so, I could extract all the routing logic 
+from the application into the framework, making it easier to determine which route is handled by which method. Additionally, 
+with this implementation, it is really simple to create new controllers. To implement routing, you need to:
 - Have a class annotated with @Controller, specifying the base path of that REST controller.
 - Have a method inside that controller annotated with @RequestMapping, declaring the request method. You can also specify a complementary path
 that is concatenated with the controller's base path.
@@ -22,22 +22,22 @@ that is concatenated with the controller's base path.
 
 ### DI
 I decided to use simple dependency injection to make the code more flexible and easier to test. By doing that I could mock all the 
-dependencies and isolate the tests of each component. To implement this, I've created the [ApplicationContainer](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fcontainer%2FApplicationContainer.java)
-class, which handles all the object instances orchestration. I've also implemented the application so that all classes annotated 
+dependencies and isolate the tests of each component. To implement this, I created the [ApplicationContainer](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fcontainer%2FApplicationContainer.java)
+class, which handles the orchestration of all object instances. I also implemented the application so that all classes annotated 
 with @Controller or @Component are instantiated by the container. This made it simple to build all the application layers.
 
 ### Authentication
-To make authentication generic and easy to implement, I've used DI and inversion of control to create the [AuthenticationService](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fsecurity%2FAuthenticationService.java) 
+To make authentication generic and easy to implement, I used DI and inversion of control to create the [AuthenticationService](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fsecurity%2FAuthenticationService.java) 
 interface. If an AuthenticationService implementation is injected into the application using @Component, it will be used in the 
 authentication flow. To use authentication, you should:
-- Create an implementation of the AuthenticationService and annotate it with @Component so it is created in the ApplicationContainer.
+- Create an implementation of the AuthenticationService and annotate it with @Component, so it is created in the ApplicationContainer.
 - Annotate the controller methods that require authentication with @Authenticated.
 
 This approach allows me to reuse authentication across all endpoints, and it's easy to add authentication where needed. If the 
 authentication needs to change, it's only necessary to change the AuthenticationService implementation.
 
 ### Data
-To store all the data, I've created an [InMemoryRepository](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fdata%2FInMemoryRepository.java) 
+To store all the data, I created an [InMemoryRepository](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fdata%2FInMemoryRepository.java) 
 class with all the basic operations I needed: list, find, and save. All the data is stored in a HashMap using the entity 
 ID as the key. This was done to improve the performance of find-by-ID operations, as the HashMap provides constant time for get operations.
 The InMemoryRepository also implements the [Repository](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fdata%2FRepository.java) interface,
@@ -46,25 +46,25 @@ so replacing it with a database repository should be straightforward as long as 
 The InMemoryRepository can store any class that extends the Entity class. I implemented it this way to reuse the repository across all 
 models and ensure that all stored models have an ID.
 
-I've also built a [FileSeeder](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fdata%2FFileSeeder.java) that can be used to seed data from a 
+I also built a [FileSeeder](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fdata%2FFileSeeder.java) that can be used to seed data from a 
 JSON file to a repository. It was built using Generics to be reusable for any model and its respective repository.
 
 
 
 ### Exceptions
-I've created multiple exceptions to handle errors in the application:
+I created multiple exceptions to handle errors in the application:
 - [AuthenticationException](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FAuthenticationException.java) handles authentication errors.
-- [InvalidRequestException.java](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FInvalidRequestException.java) handles errors in the request payload/parameters.
-- [NotFoundException.java](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FNotFoundException.java) handles route and resource not found errors.
-- [ValidationException.java](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FValidationException.java) handles the validation of models being created/updated.
+- [InvalidRequestException](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FInvalidRequestException.java) handles errors in the request payload/parameters.
+- [NotFoundException](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FNotFoundException.java) handles route and resource not found errors.
+- [ValidationException](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FValidationException.java) handles the validation of models being created/updated.
 
 All these exceptions are API exceptions and result in 4xx status codes, according to the exception. To handle exceptions
-generated by the server code I've created the [InternalException.java](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FInternalException.java).
+generated by the server code I created the [InternalException](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FInternalException.java).
 This exception results in a 500 status code and an "Internal server error." message.
 
 
 ## Product
-Here, I've created a few layers to handle incoming requests, apply the business logic, manipulate data, and store it:
+I created a few layers to handle incoming requests, apply the business logic, manipulate data, and store it:
 
 - controller: creates all the routes and maps them to service methods.
 - service: responsible for all business logic and processing data between repositories and controllers
