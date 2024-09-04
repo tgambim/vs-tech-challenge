@@ -1,100 +1,100 @@
 # Decisions
 
 I've decided to break the project into two parts: 
-- create a small framework to handle requests, routing and objects initialization
-- implementing the api with all business logic
+- Create a small framework to handle requests, routing, and object initialization.
+- Implement the API with all business logic.
 
-I also avoided using any libraries/frameworks to demonstrate as much as possible my skills and decisions. The exceptions
-were the Jackson lib for converting objects to/from JSON, the Reflections lib that were used for scanning classes with annotations
-and JUnit/Mockito that help writing tests.
+I also avoided using any libraries/frameworks to demonstrate my skills and decisions as much as possible. The exceptions were the Jackson library 
+for converting objects to/from JSON, the Reflections library, which was used for scanning classes with annotations, and JUnit/Mockito, 
+which helps in writing tests.
 
 ## Framework
 ### Routing
-Here I opted to do annotation based routing system to handle all the requests. Doing that I could extract all the logic 
-from the application to the framework implementation and making easier to find which route is handled by the methods. 
-Also, with this implementation it is really simple to create new controllers. To do routing you have to:
-- Have a class annotated with @Controller, informing the base path of that REST controller
-- Have a method inside that controller annotated with @RequestMapping and declaring the request method. You can also inform 
-a complementary path that is concatenated with the controller base path
-- To add query params you should create method parameters annotated with @QueryParam, passing the name of the parameter and if it is optional
-- To add a request body you should create a method parameter annotated with @Body
-- To send a custom success http status code you can annotate the method with @ResponseStatus using the desired code as parameter
+Here I opted to implement an annotation-based routing system to handle all the requests. By doing that, I could extract all the routing 
+logic from the application to the framework implementation, making it easier to find which route is handled by which method. Additionally, 
+with this implementation, it is really simple to create new controllers. To do routing, you need to:
+- Have a class annotated with @Controller, specifying the base path of that REST controller.
+- Have a method inside that controller annotated with @RequestMapping, declaring the request method. You can also specify a complementary path
+that is concatenated with the controller's base path.
+- To add query parameters, create method parameters annotated with @QueryParam, specifying the name of the parameter and whether it is optional.
+- To add a request body, create a method parameter annotated with @Body.
+- To send a custom HTTP status code on a successful request, annotate the method with @ResponseStatus, using the desired code as a parameter.
 
 ### DI
-I decided to use a simple dependency injection to make the code more flexible and easier to test. Doing that I could mock all the 
-dependencies and isolate the tests of each component. To implement that I've created the  [ApplicationContainer](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fcontainer%2FApplicationContainer.java)
-class that handle all the object instances orchestration. I've also implemented the application in a way that all the classes 
-annotated with @Controller or @Component were instantiated by the container. Doing that was simple to build all the application layers.
+I decided to use simple dependency injection to make the code more flexible and easier to test. By doing that I could mock all the 
+dependencies and isolate the tests of each component. To implement this, I've created the [ApplicationContainer](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fcontainer%2FApplicationContainer.java)
+class, which handles all the object instances orchestration. I've also implemented the application so that all classes annotated 
+with @Controller or @Component are instantiated by the container. This made it simple to build all the application layers.
 
 ### Authentication
-To make the authentication generic and easy to implement, I've created the [AuthenticationService](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fsecurity%2FAuthenticationService.java) 
-interface. To use the authentication you should: 
-- Create an implementation of the Service and annotate that with @Component to be created in the ApplicationContainer
-- Annotated the controller methods that should the authenticated with @Authenticated
+To make authentication generic and easy to implement, I've used DI and inversion of control to create the [AuthenticationService](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fsecurity%2FAuthenticationService.java) 
+interface. If an AuthenticationService implementation is injected into the application using @Component, it will be used in the 
+authentication flow. To use authentication, you should:
+- Create an implementation of the AuthenticationService and annotate it with @Component so it is created in the ApplicationContainer.
+- Annotate the controller methods that require authentication with @Authenticated.
 
-Doing that I could reuse the authentication in all endpoints, and it was easy to add auth to then. Also, if the authentication
-need to change, its only necessary to change the AuthenticationService implementation.
+This approach allows me to reuse authentication across all endpoints, and it's easy to add authentication where needed. If the 
+authentication needs to change, it's only necessary to change the AuthenticationService implementation.
 
 ### Data
-To store all the data I've created a [InMemoryRepository](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fdata%2FInMemoryRepository.java) 
-class with all the basic operations I needed: list, find and save. All the data was stored in a HashMap using the entity 
-id as key. I did that to improve the performance of the find by id operations since the HashMap provides constant time to get operations.
-Also, the InMemoryRepository implements the [Repository](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fdata%2FRepository.java) interface
-so, with its necessary to replace the InMemoryRepository with a database it should be simple as long as the new DatabaseRepository
-implements the RepositoryInterface
+To store all the data, I've created an [InMemoryRepository](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fdata%2FInMemoryRepository.java) 
+class with all the basic operations I needed: list, find, and save. All the data is stored in a HashMap using the entity 
+ID as the key. This was done to improve the performance of find-by-ID operations, as the HashMap provides constant time for get operations.
+The InMemoryRepository also implements the [Repository](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fdata%2FRepository.java) interface,
+so replacing it with a database repository should be straightforward as long as the new repository implements the RepositoryInterface.
 
-The InMemoryRepository can store any class that extends the Entity class. I implemented it that way to reuse the repository
-to all models and also ensure that all the stored models have an id.
+The InMemoryRepository can store any class that extends the Entity class. I implemented it this way to reuse the repository across all 
+models and ensure that all stored models have an ID.
 
-I've also built a [FileSeeder](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fdata%2FFileSeeder.java) that can be used
-to seed data from a json file to a repository. It was build using Generics and some inversion of control to be reusable 
-for any model and its respective repository
+I've also built a [FileSeeder](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fdata%2FFileSeeder.java) that can be used to seed data from a 
+JSON file to a repository. It was built using Generics to be reusable for any model and its respective repository.
+
+
 
 ### Exceptions
 I've created multiple exceptions to handle errors in the application:
-- [AuthenticationException](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FAuthenticationException.java) handles authentication errors
-- [InvalidRequestException.java](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FInvalidRequestException.java) handle errors in the request payload/params
-- [NotFoundException.java](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FNotFoundException.java) handle routes and resource not found errors
-- [ValidationException.java](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FValidationException.java) handle the validation of models being created/updated
+- [AuthenticationException](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FAuthenticationException.java) handles authentication errors.
+- [InvalidRequestException.java](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FInvalidRequestException.java) handles errors in the request payload/parameters.
+- [NotFoundException.java](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FNotFoundException.java) handles route and resource not found errors.
+- [ValidationException.java](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FValidationException.java) handles the validation of models being created/updated.
 
-All these four exceptions are API exceptions and results in 4xx status codes, according to the exception. To handle exceptions
+All these exceptions are API exceptions and result in 4xx status codes, according to the exception. To handle exceptions
 generated by the server code I've created the [InternalException.java](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fexception%2FInternalException.java).
-This exception results in a 500 status code an "Internal server error." message.
+This exception results in a 500 status code and an "Internal server error." message.
 
 
 ## Product
-Here I've created a few layers to handle the incoming request, manipulate data and store it:
+Here, I've created a few layers to handle incoming requests, apply the business logic, manipulate data, and store it:
 
-- controller:  create all the routes and map then to service methods.
-- service: responsible for all the business logic
-- repository: store all the data
-- entity: responsible for modeling the data stored in the repositories 
-- DTO: responsible for modeling the data received and sent in the controllers
-- converter: convert data between entities and DTOs
-- validation: validate the DTOs before creating/updating
-- seeder: populate data in the application when it starts
+- controller: creates all the routes and maps them to service methods.
+- service: responsible for all business logic and processing data between repositories and controllers
+- repository: stores all the data.
+- entity: models the data stored in the repositories.
+- DTO: models the data received and sent in the controllers.
+- converter: converts data between entities and DTOs.
+- validation: validates DTOs before creating/updating.
+- seeder: populates data in the application when it starts.
 
 # Improvements
-As the intent of this implementation was to show my coding skills I avoid using libs but a big improvement would be to use
-some libraries to reduce boilerplate like Project Lombok that automatically generates getters, setter, constructors, among other
-things using annotations. Apache Commons could also be used to improve URI and parameter parsing.
+As the intent of this implementation was to showcase my coding skills, I avoided using libraries. However, a significant improvement would be 
+to use some libraries to reduce boilerplate code, such as Project Lombok, which automatically generates getters, setters, and constructors, 
+among other things, using annotations. Apache Commons could also be used to improve URI and parameter parsing.
 
-The Application container could also be improved providing a way to easily override components to give more flexibility to the framework.
-It would also be nice to have a way to configure methods that return objects that should be added to the container. With this
-would be easier to add objects the need some kind of configuration, like the Jackson ObjectMapper that needs to register modules.
-Another option is to use a more robust framework like Spring Boot to have more options while expanding the api.
+The application container could be improved by providing a way to easily override components to give more flexibility to the framework. 
+It would also be useful to configure methods that return objects to be added to the container. This would make it easier to add objects that 
+need some configuration, like the Jackson ObjectMapper, which needs to register modules. Another option is to use a more robust framework like 
+Spring Boot for additional options while expanding the API.
 
-The authentication credentials shouldn't be fixed and hardcoded. It's a better option to remove then from the repository and
-start using some credential service like AWS Secrets Manager or AWS Parameter Store.
+Authentication credentials shouldn't be fixed and hardcoded. It's better to remove them from the repository and use a credential service like 
+AWS Secrets Manager or AWS Parameter Store.
 
-About the product itself, creating controllers to manage Locations and ServiceCategories is probably a necessary step to build 
-the application.
+Regarding the product itself, creating controllers to manage Locations and ServiceCategories is likely a necessary step to build the application.
 
-If the goal is to deploy the application in AWS, a good option is to create the infrastructure using AWS CDK.
+If the goal is to deploy the application on AWS, a good option is to create the infrastructure using AWS CDK.
 
 # API documentation
 
-### Potential vendors for a given job:
+### Potential Vendors for a Given Job:
 Request:
 ``` http request
 GET http://localhost:8000/api/vendors?jobId={jobId}
@@ -102,7 +102,7 @@ GET http://localhost:8000/api/vendors?jobId={jobId}
 Headers:
 Authorization: Basic {token}
 ```
-where {jobId} should be the job id you want to list the vendors for and {token} is the basic authentication token
+Where {jobId} should be the job ID for which you want to list the vendors and {token} is the basic authentication token.
 
 Response:
 ``` json
@@ -122,13 +122,12 @@ Response:
 }]
 ```
 
-### Vendors count for a given location and service category:
+### Vendors Count for a Given Location and Service Category:
 Request:
 ``` http request
 GET http://localhost:8000/api/vendors/count?locationId={locationId}&serviceCategoryId={serviceCategoryId}
 ```
-where {locationId} and {serviceCategoryId} should be the location id and service category id, respectively, 
-that you want to list the vendors for.
+Where {locationId} and {serviceCategoryId} should be the location ID and service category ID, respectively, for which you want to list the vendors.
 
 Response:
 ``` json
@@ -139,7 +138,7 @@ Response:
 }
 ```
 
-### Create vendor:
+### Create Vendor:
 Request:
 ``` http request
 POST http://localhost:8000/api/vendors
@@ -158,10 +157,10 @@ Body
 }
 ```
 where: 
-- {vendorName} is the vendor name
-- {locationId} is the location id
-- services is a map where {serviceCategoryIdX} is a service category and {compliantX} is the compliant status (true/false) for that category
-- {token} is the basic authentication token
+- {vendorName} is the vendor name.
+- {locationId} is the location ID.
+- services is a map where {serviceCategoryIdX} is a service category id and {compliantX} is the compliant status (true/false) for that category.
+- {token} is the basic authentication token.
 
 Response:
 ``` json
@@ -204,10 +203,10 @@ Body
 }
 ```
 where:
-- {jobDescription} is the job description
-- {locationId} is the location id
-- {serviceCategoryId} is the service category id
-- {token} is the basic authentication token
+- {jobDescription} is the job description.
+- {locationId} is the location id.
+- {serviceCategoryId} is the service category ID.
+- {token} is the basic authentication token.
 
 Response:
 ``` json
