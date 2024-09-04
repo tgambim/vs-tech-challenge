@@ -3,8 +3,8 @@ package unit.framework;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.gambim.framework.annotation.Controller;
-import com.gambim.framework.exception.InternalException;
 import com.gambim.framework.container.ApplicationContainer;
+import com.gambim.framework.exception.InternalException;
 import com.gambim.framework.security.AuthenticationService;
 import com.gambim.service.BasicAuthenticationService;
 import java.time.LocalDateTime;
@@ -28,14 +28,16 @@ class ApplicationContainerTest {
 
     @Test
     void testGetInstance() {
-        TestController testController = assertDoesNotThrow(() -> applicationContainer.getInstance(TestController.class));
+        TestController testController =
+                assertDoesNotThrow(() -> applicationContainer.getInstance(TestController.class));
 
         assertNotNull(testController);
     }
 
     @Test
     void testGetInstanceWithNonRegisteredClass() {
-        ApplicationContainerTest testClass = assertDoesNotThrow(() -> applicationContainer.getInstance(ApplicationContainerTest.class));
+        ApplicationContainerTest testClass =
+                assertDoesNotThrow(() -> applicationContainer.getInstance(ApplicationContainerTest.class));
 
         assertNull(testClass);
     }
@@ -68,7 +70,8 @@ class ApplicationContainerTest {
     @Test
     void testRegisterAllWithUnsatisfiedDependency() {
         InternalException resultException = assertThrows(
-                InternalException.class, () -> applicationContainer.registerAll(Set.of(ClassWithUnsatisfiedDependency.class)));
+                InternalException.class,
+                () -> applicationContainer.registerAll(Set.of(ClassWithUnsatisfiedDependency.class)));
 
         assertEquals(
                 "Unsatisfied dependency: could not find an instance of java.time.LocalDate",
@@ -88,7 +91,8 @@ class ApplicationContainerTest {
         BasicAuthenticationService basicAuthenticationService = new BasicAuthenticationService();
         assertDoesNotThrow(() -> applicationContainer.registerInstance(basicAuthenticationService));
 
-        List<AuthenticationService> services = applicationContainer.getInstancesThatImplements(AuthenticationService.class);
+        List<AuthenticationService> services =
+                applicationContainer.getInstancesThatImplements(AuthenticationService.class);
 
         assertEquals(1, services.size());
         assertEquals(basicAuthenticationService, services.get(0));
