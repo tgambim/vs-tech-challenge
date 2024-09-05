@@ -28,7 +28,7 @@ with @Controller or @Component are instantiated by the container. This made it s
 
 ### Authentication
 To make authentication generic and easy to implement, I used DI and inversion of control to create the [AuthenticationService](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fsecurity%2FAuthenticationService.java) 
-interface. If an AuthenticationService implementation is injected into the application using @Component, it will be used in the 
+interface. If an AuthenticationService implementation is created in the application using @Component, it will be used in the 
 authentication flow. To use authentication, you should:
 - Create an implementation of the AuthenticationService and annotate it with @Component, so it is created in the ApplicationContainer.
 - Annotate the controller methods that require authentication with @Authenticated.
@@ -41,13 +41,13 @@ To store all the data, I created an [InMemoryRepository](src%2Fmain%2Fjava%2Fcom
 class with all the basic operations I needed: list, find, and save. All the data is stored in a HashMap using the entity 
 ID as the key. This was done to improve the performance of find-by-ID operations, as the HashMap provides constant time for get operations.
 The InMemoryRepository also implements the [Repository](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fdata%2FRepository.java) interface,
-so replacing it with a database repository should be straightforward as long as the new repository implements the RepositoryInterface.
+so replacing it with a database repository should be straightforward as long as the new repository implements the Repository interface.
 
 The InMemoryRepository can store any class that extends the Entity class. I implemented it this way to reuse the repository across all 
 models and ensure that all stored models have an ID.
 
 I also built a [FileSeeder](src%2Fmain%2Fjava%2Fcom%2Fgambim%2Fframework%2Fdata%2FFileSeeder.java) that can be used to seed data from a 
-JSON file to a repository. It was built using Generics to be reusable for any model and its respective repository.
+JSON file to a repository when the application starts. It was built using Generics to be reusable for any model and its respective repository.
 
 
 
