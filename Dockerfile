@@ -1,4 +1,4 @@
-FROM gradle:8.10.0-jdk17-alpine AS build_image
+FROM gradle:8.10.0-jdk17-jammy AS build_image
 
 ENV APP_HOME=/usr/app/
 WORKDIR $APP_HOME
